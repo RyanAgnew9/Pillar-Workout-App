@@ -30,6 +30,11 @@ npm install
 npm run start
 ```
 
+Run everything (install + checks + script smoke runs):
+```bash
+./run_everything.sh
+```
+
 Then open with:
 - iOS Expo Go app
 - Android Expo Go app
