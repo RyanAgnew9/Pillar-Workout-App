@@ -147,3 +147,13 @@ npm install
 npm run phone
 ```
 
+## Merge helper (accept incoming + run)
+
+If you are in a merge conflict and want to keep **incoming changes** everywhere, run:
+
+```bash
+./accept_incoming_and_run.sh
+```
+
+This will accept incoming versions for all conflicted files, stage them, verify `package.json`, and launch Expo Go with the existing one-command runner.
+
