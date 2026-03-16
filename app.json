@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Pillar",
+    "slug": "pillar-workout-app",
+    "scheme": "pillar",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Pillar to access your photos for progress tracking.",
+          "cameraPermission": "Allow Pillar to use your camera for progress captures."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0F1115"
+      }
+    }
+  }
+}
