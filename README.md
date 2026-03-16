@@ -25,30 +25,15 @@ Pillar is an Expo + React Native + TypeScript app for daily bodyweight training 
 
 ## Quick start
 
-Run the app with one command (recommended):
-```bash
-./run_app.sh
-```
-
-Or with npm script:
-```bash
-npm run app:run
-```
-
-Manual flow:
 ```bash
 npm install
 npm run start
 ```
 
-Run everything (preflight + install + checks + script smoke runs):
+Run everything (install + checks + script smoke runs):
 ```bash
 ./run_everything.sh
 ```
-
-Preflight checks (now built into the script):
-- Detect unresolved git conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`)
-- Validate `package.json` JSON syntax before install
 
 Then open with:
 - iOS Expo Go app
@@ -63,11 +48,6 @@ npm run phone
 Dependency deprecation clean-up command:
 ```bash
 npm install && npm run deps:refresh
-```
-
-If install fails due registry/proxy issues, run:
-```bash
-npm run doctor:install
 ```
 
 ## Project structure
