@@ -1,22 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Animated, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { colors } from '@/constants/theme';
 import { PillCard, PremiumButton, Screen } from '@/components/ui';
+import { localBackend } from '@/services/localBackend';
 import { useAppState } from '@/lib/useAppState';
 
 export default function TodayScreen() {
-  const { exercises, todayEntries, streak, totalVolume, score, scoreBucket, quoteIndex, quotes, logWorkout } = useAppState();
+  const { exercises, todayEntries, streak, totalVolume, score, scoreBucket, quoteIndex, logWorkout } = useAppState();
+  const quotes = localBackend.listQuotes();
   const quote = quotes.length ? quotes[quoteIndex % quotes.length] : { text: 'Show up daily.', author: 'Pillar' };
   const [reps, setReps] = useState('20');
   const [sets, setSets] = useState('3');
-  const fade = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.timing(fade, { toValue: 0.55, duration: 220, useNativeDriver: true }),
-      Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: true }),
-    ]).start();
-  }, [fade, quoteIndex]);
+  const fade = useMemo(() => new Animated.Value(1), [quoteIndex]);
+  Animated.sequence([Animated.timing(fade, { toValue: 0.5, duration: 250, useNativeDriver: true }), Animated.timing(fade, { toValue: 1, duration: 250, useNativeDriver: true })]).start();
 
   return (
     <Screen>
@@ -32,6 +28,7 @@ export default function TodayScreen() {
           <TextInput value={reps} onChangeText={setReps} keyboardType="numeric" style={styles.input} />
           <TextInput value={sets} onChangeText={setSets} keyboardType="numeric" style={styles.input} />
         </View>
+        <View style={styles.row}><TextInput value={reps} onChangeText={setReps} keyboardType="numeric" style={styles.input} /><TextInput value={sets} onChangeText={setSets} keyboardType="numeric" style={styles.input} /></View>
       </PillCard>
       <FlatList
         data={exercises}
@@ -50,6 +47,10 @@ export default function TodayScreen() {
             Pace vs last week: {scoreBucket.toUpperCase()}
           </Text>
         }
+            <PremiumButton label={`Log ${reps} x ${sets}`} onPress={() => logWorkout(item.id, Number(reps), Number(sets), item.type === 'time' ? Number(reps) * 10 : 0)} />
+          </PillCard>
+        )}
+        ListFooterComponent={<Text style={[styles.sub, { color: scoreBucket === 'green' ? colors.green : scoreBucket === 'yellow' ? colors.yellow : colors.red }]}>Pace vs last week: {scoreBucket.toUpperCase()}</Text>}
       />
       <Text style={styles.sub}>Entries today: {todayEntries.length}</Text>
     </Screen>

@@ -6,6 +6,8 @@ set -euo pipefail
 # - default: install + typecheck + smoke-run app scripts
 # - --quick: install + typecheck only
 # - --phone: start Expo in tunnel mode for phone preview
+# Runs all npm scripts defined in package.json in a practical order.
+# For Expo start-like scripts that run indefinitely, we execute a short smoke run via timeout.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
@@ -44,6 +46,9 @@ npm install
 
 echo "▶ Refreshing transitive dependency tree"
 npm run deps:refresh
+
+echo "▶ Installing dependencies"
+npm install
 
 echo "▶ Running TypeScript typecheck"
 npm run typecheck
