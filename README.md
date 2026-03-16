@@ -25,32 +25,15 @@ Pillar is an Expo + React Native + TypeScript app for daily bodyweight training 
 
 ## Quick start
 
-Run the app with one command (recommended):
-```bash
-./run_app.sh
-```
-
-If `package.json` gets broken by a bad merge/edit, `./run_app.sh` now auto-restores from `package.clean.json` and continues.
-
-Or with npm script:
-```bash
-npm run app:run
-```
-
-Manual flow:
 ```bash
 npm install
 npm run start
 ```
 
-Run everything (preflight + install + checks + script smoke runs):
+Run everything (install + checks + script smoke runs):
 ```bash
 ./run_everything.sh
 ```
-
-Preflight checks (now built into the script):
-- Detect unresolved git conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`)
-- Validate `package.json` JSON syntax before install
 
 Then open with:
 - iOS Expo Go app
@@ -65,11 +48,6 @@ npm run phone
 Dependency deprecation clean-up command:
 ```bash
 npm install && npm run deps:refresh
-```
-
-If install fails due registry/proxy issues, run:
-```bash
-npm run doctor:install
 ```
 
 ## Project structure
@@ -146,14 +124,4 @@ Then install and run:
 npm install
 npm run phone
 ```
-
-## Merge helper (accept incoming + run)
-
-If you are in a merge conflict and want to keep **incoming changes** everywhere, run:
-
-```bash
-./accept_incoming_and_run.sh
-```
-
-This will accept incoming versions for all conflicted files, stage them, verify `package.json`, and launch Expo Go with the existing one-command runner.
 

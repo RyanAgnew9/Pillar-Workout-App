@@ -1,4 +1,5 @@
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { scoreToBucket } from '@/constants/scoring';
 import { initDb } from '@/lib/db';
 import { localBackend } from '@/services/localBackend';
@@ -23,6 +24,7 @@ const AppStateContext = createContext<AppStateValue | null>(null);
 const today = () => new Date().toISOString().slice(0, 10);
 
 export const AppStateProvider = ({ children }: PropsWithChildren) => {
+export const useAppState = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [todayEntries, setTodayEntries] = useState<WorkoutEntry[]>([]);
   const [dailySummaries, setDailySummaries] = useState(localBackend.listDailySummaries());
@@ -30,6 +32,8 @@ export const AppStateProvider = ({ children }: PropsWithChildren) => {
   const [quotes, setQuotes] = useState<{ id: number; text: string; author: string }[]>([]);
 
   const date = today();
+
+  const date = new Date().toISOString().slice(0, 10);
 
   const refresh = () => {
     setExercises(localBackend.listExercises());
@@ -68,6 +72,11 @@ export const AppStateProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     if (!exercises.length) return;
+  const totalVolume = todayEntries.reduce((sum, entry) => sum + entry.reps * Math.max(entry.sets, 1) + Math.floor(entry.duration_seconds / 10), 0);
+
+  const score = Math.min(100, Math.floor(totalVolume * 0.6 + Math.min(40, todayEntries.length * 8)));
+
+  const updateSummary = () => {
     localBackend.upsertDailySummary({
       date,
       total_volume: totalVolume,
@@ -77,6 +86,12 @@ export const AppStateProvider = ({ children }: PropsWithChildren) => {
     });
     setDailySummaries(localBackend.listDailySummaries());
   }, [date, exercises.length, score, streak, totalVolume]);
+    refresh();
+  };
+
+  useEffect(() => {
+    if (exercises.length) updateSummary();
+  }, [todayEntries.length]);
 
   const logWorkout = (exercise_id: number, reps: number, sets: number, duration_seconds = 0, notes = '') => {
     localBackend.addWorkoutEntry({
@@ -92,6 +107,7 @@ export const AppStateProvider = ({ children }: PropsWithChildren) => {
   };
 
   const value: AppStateValue = {
+  return {
     exercises,
     todayEntries,
     dailySummaries,
@@ -114,4 +130,7 @@ export const useAppState = () => {
     throw new Error('useAppState must be used within AppStateProvider');
   }
   return ctx;
+    logWorkout,
+    refresh,
+  };
 };

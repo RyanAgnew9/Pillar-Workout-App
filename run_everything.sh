@@ -6,6 +6,8 @@ set -euo pipefail
 # - default: install + typecheck + smoke-run app scripts
 # - --quick: install + typecheck only
 # - --phone: start Expo in tunnel mode for phone preview
+# Runs all npm scripts defined in package.json in a practical order.
+# For Expo start-like scripts that run indefinitely, we execute a short smoke run via timeout.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
@@ -15,68 +17,15 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-check_conflict_markers() {
-  local markers
-  markers=$(rg -n "^(<<<<<<<|=======|>>>>>>>)" . -g '!*.png' || true)
-  if [[ -n "$markers" ]]; then
-    echo "❌ Git conflict markers found. Resolve these before running:"
-    echo "$markers"
-    exit 1
-  fi
-}
-
-validate_package_json() {
-  if command -v node >/dev/null 2>&1; then
-    node -e "JSON.parse(require('fs').readFileSync('package.json','utf8')); console.log('✅ package.json JSON is valid')"
-  else
-    echo "⚠️ node not found for JSON validation; skipping package.json parse check"
-  fi
-}
-
-install_with_self_heal() {
-  echo "▶ Installing dependencies"
-
-  set +e
-  npm install
-  local rc=$?
-  set -e
-
-  if [[ $rc -eq 0 ]]; then
-    echo "✅ npm install succeeded"
-    return 0
-  fi
-
-  echo "⚠️ npm install failed (exit ${rc}). Attempting automatic registry/proxy self-heal..."
-
-  npm config set registry https://registry.npmjs.org || true
-  npm config delete proxy || true
-  npm config delete https-proxy || true
-  npm cache clean --force || true
-
-  set +e
-  npm install --registry=https://registry.npmjs.org
-  rc=$?
-  set -e
-
-  if [[ $rc -ne 0 ]]; then
-    echo "❌ npm install still failing after self-heal."
-    echo "Run this locally and retry:" 
-    echo "   npm run doctor:install"
-    exit $rc
-  fi
-
-  echo "✅ npm install succeeded after self-heal"
-}
-
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat <<'USAGE'
 Usage:
-  ./run_everything.sh            # full run (preflight + install + checks + smoke run of all scripts)
-  ./run_everything.sh --quick    # preflight + install + typecheck only
-  ./run_everything.sh --phone    # preflight + launch Expo for phone preview (tunnel mode)
+  ./run_everything.sh            # full run (install + checks + smoke run of all scripts)
+  ./run_everything.sh --quick    # install + typecheck only
+  ./run_everything.sh --phone    # launch Expo for phone preview (tunnel mode)
 
-One-command self-heal install:
-  npm run doctor:install
+Deprecation warning clean-up command:
+  npm install && npm run deps:refresh
 
 Notes:
 - Scripts like start/web/android/ios are long-running Expo processes.
@@ -85,21 +34,21 @@ USAGE
   exit 0
 fi
 
-echo "▶ Running preflight checks"
-check_conflict_markers
-validate_package_json
-
 if [[ "${1:-}" == "--phone" ]]; then
   echo "▶ Launching Expo tunnel for phone preview"
-  install_with_self_heal
+  npm install
   npm run phone
   exit 0
 fi
 
-install_with_self_heal
+echo "▶ Installing dependencies"
+npm install
 
 echo "▶ Refreshing transitive dependency tree"
 npm run deps:refresh
+
+echo "▶ Installing dependencies"
+npm install
 
 echo "▶ Running TypeScript typecheck"
 npm run typecheck

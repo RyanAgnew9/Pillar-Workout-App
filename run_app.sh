@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# One-command launcher for beginners.
-# It auto-restores a known-good package.json if your local file is malformed,
-# installs dependencies (with self-heal), then starts Expo tunnel for Expo Go.
-
+# One-command launcher: installs (with self-heal) if needed, then starts Expo for phone.
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
@@ -18,47 +15,24 @@ if ! command -v node >/dev/null 2>&1; then
   exit 1
 fi
 
-validate_or_restore_package_json() {
-  if node -e "JSON.parse(require('fs').readFileSync('package.json','utf8'));" >/dev/null 2>&1; then
-    echo "✅ package.json is valid"
-    return 0
-  fi
+# Ensure package.json is valid before doing anything.
+node -e "JSON.parse(require('fs').readFileSync('package.json','utf8'));"
 
-  echo "⚠️ package.json is malformed. Restoring known-good template (package.clean.json)."
-  if [[ -f package.clean.json ]]; then
-    cp package.clean.json package.json
-  else
-    echo "❌ package.clean.json is missing; cannot auto-recover package.json"
-    exit 1
-  fi
-
-  node -e "JSON.parse(require('fs').readFileSync('package.json','utf8'));" >/dev/null
-  echo "✅ package.json restored"
-}
-
-install_with_self_heal() {
-  if [[ -d node_modules ]]; then
-    echo "✅ Dependencies already installed; skipping install"
-    return 0
-  fi
-
+# Auto-install only when node_modules is missing.
+if [[ ! -d node_modules ]]; then
   echo "▶ First run detected: installing dependencies"
   set +e
   npm install
   rc=$?
   set -e
 
-  if [[ $rc -eq 0 ]]; then
-    echo "✅ npm install succeeded"
-    return 0
+  if [[ $rc -ne 0 ]]; then
+    echo "⚠️ npm install failed; running self-heal installer"
+    npm run doctor:install
   fi
-
-  echo "⚠️ npm install failed; running self-heal installer"
-  npm run doctor:install
-}
-
-validate_or_restore_package_json
-install_with_self_heal
+else
+  echo "✅ Dependencies already installed; skipping install"
+fi
 
 echo "▶ Starting Pillar in Expo Go tunnel mode"
 npm run phone
