@@ -24,6 +24,10 @@ export default function TodayScreen() {
       <Text style={styles.sub}>Streak {streak} days • Volume {totalVolume} • Score {score}</Text>
       <PillCard>
         <Text style={styles.cardLabel}>Quick log</Text>
+        <View style={styles.row}>
+          <TextInput value={reps} onChangeText={setReps} keyboardType="numeric" style={styles.input} />
+          <TextInput value={sets} onChangeText={setSets} keyboardType="numeric" style={styles.input} />
+        </View>
         <View style={styles.row}><TextInput value={reps} onChangeText={setReps} keyboardType="numeric" style={styles.input} /><TextInput value={sets} onChangeText={setSets} keyboardType="numeric" style={styles.input} /></View>
       </PillCard>
       <FlatList
@@ -32,6 +36,17 @@ export default function TodayScreen() {
         renderItem={({ item }) => (
           <PillCard>
             <Text style={styles.exercise}>{item.name}</Text>
+            <PremiumButton
+              label={`Log ${reps} x ${sets}`}
+              onPress={() => logWorkout(item.id, Number(reps), Number(sets), item.type === 'time' ? Number(reps) * 10 : 0)}
+            />
+          </PillCard>
+        )}
+        ListFooterComponent={
+          <Text style={[styles.sub, { color: scoreBucket === 'green' ? colors.green : scoreBucket === 'yellow' ? colors.yellow : colors.red }]}>
+            Pace vs last week: {scoreBucket.toUpperCase()}
+          </Text>
+        }
             <PremiumButton label={`Log ${reps} x ${sets}`} onPress={() => logWorkout(item.id, Number(reps), Number(sets), item.type === 'time' ? Number(reps) * 10 : 0)} />
           </PillCard>
         )}

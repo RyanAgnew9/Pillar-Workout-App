@@ -17,7 +17,7 @@ Pillar is an Expo + React Native + TypeScript app for daily bodyweight training 
 
 ## Tech stack
 
-- Expo SDK 53
+- Expo SDK 54
 - React Native + TypeScript
 - Expo Router
 - expo-sqlite
@@ -39,6 +39,16 @@ Then open with:
 - iOS Expo Go app
 - Android Expo Go app
 - or web via `npm run web`
+
+Phone preview command (stable over different networks):
+```bash
+npm run phone
+```
+
+Dependency deprecation clean-up command:
+```bash
+npm install && npm run deps:refresh
+```
 
 ## Project structure
 
@@ -92,3 +102,26 @@ Adjustable thresholds and weight variables are in one file to keep scoring trans
 ## Notes
 
 This MVP is intentionally Expo Go compatible for rapid testing. Native-only widget modules and full subscription SDK wiring are deferred, but architecture seams are already in place.
+
+
+## Merge conflict recovery (if you see <<<<<< / ====== / >>>>>>)
+
+If your files contain conflict markers, resolve them before running the app:
+
+```bash
+rg -n "^(<<<<<<<|=======|>>>>>>>)" README.md package.json run_everything.sh
+```
+
+If markers are found and you want to keep the SDK 54 + phone preview setup, restore these files from the latest committed version:
+
+```bash
+git checkout -- package.json run_everything.sh README.md
+```
+
+Then install and run:
+
+```bash
+npm install
+npm run phone
+```
+

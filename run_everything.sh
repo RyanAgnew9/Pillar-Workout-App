@@ -2,6 +2,10 @@
 set -euo pipefail
 
 # Pillar project runner
+# Modes:
+# - default: install + typecheck + smoke-run app scripts
+# - --quick: install + typecheck only
+# - --phone: start Expo in tunnel mode for phone preview
 # Runs all npm scripts defined in package.json in a practical order.
 # For Expo start-like scripts that run indefinitely, we execute a short smoke run via timeout.
 
@@ -18,6 +22,10 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
 Usage:
   ./run_everything.sh            # full run (install + checks + smoke run of all scripts)
   ./run_everything.sh --quick    # install + typecheck only
+  ./run_everything.sh --phone    # launch Expo for phone preview (tunnel mode)
+
+Deprecation warning clean-up command:
+  npm install && npm run deps:refresh
 
 Notes:
 - Scripts like start/web/android/ios are long-running Expo processes.
@@ -25,6 +33,19 @@ Notes:
 USAGE
   exit 0
 fi
+
+if [[ "${1:-}" == "--phone" ]]; then
+  echo "▶ Launching Expo tunnel for phone preview"
+  npm install
+  npm run phone
+  exit 0
+fi
+
+echo "▶ Installing dependencies"
+npm install
+
+echo "▶ Refreshing transitive dependency tree"
+npm run deps:refresh
 
 echo "▶ Installing dependencies"
 npm install

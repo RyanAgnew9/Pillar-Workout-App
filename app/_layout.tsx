@@ -1,5 +1,10 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { AppStateProvider } from '@/lib/useAppState';
+
+export default function RootLayout() {
+  return (
+    <AppStateProvider>
 
 export default function RootLayout() {
   return (
@@ -9,6 +14,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
       </Stack>
+    </AppStateProvider>
     </>
   );
 }

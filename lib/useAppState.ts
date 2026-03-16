@@ -1,14 +1,37 @@
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { scoreToBucket } from '@/constants/scoring';
 import { initDb } from '@/lib/db';
 import { localBackend } from '@/services/localBackend';
 import { Exercise, WorkoutEntry } from '@/types/models';
 
+type AppStateValue = {
+  exercises: Exercise[];
+  todayEntries: WorkoutEntry[];
+  dailySummaries: { id: number; date: string; total_volume: number; score: number; mood_note: string; streak_count: number }[];
+  streak: number;
+  totalVolume: number;
+  score: number;
+  scoreBucket: 'green' | 'yellow' | 'red';
+  quoteIndex: number;
+  quotes: { id: number; text: string; author: string }[];
+  logWorkout: (exercise_id: number, reps: number, sets: number, duration_seconds?: number, notes?: string) => void;
+  refresh: () => void;
+};
+
+const AppStateContext = createContext<AppStateValue | null>(null);
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+export const AppStateProvider = ({ children }: PropsWithChildren) => {
 export const useAppState = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [todayEntries, setTodayEntries] = useState<WorkoutEntry[]>([]);
   const [dailySummaries, setDailySummaries] = useState(localBackend.listDailySummaries());
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const [quotes, setQuotes] = useState<{ id: number; text: string; author: string }[]>([]);
+
+  const date = today();
 
   const date = new Date().toISOString().slice(0, 10);
 
@@ -16,6 +39,7 @@ export const useAppState = () => {
     setExercises(localBackend.listExercises());
     setTodayEntries(localBackend.listEntriesByDate(date));
     setDailySummaries(localBackend.listDailySummaries());
+    setQuotes(localBackend.listQuotes());
   };
 
   useEffect(() => {
@@ -39,6 +63,15 @@ export const useAppState = () => {
     return count;
   }, [dailySummaries]);
 
+  const totalVolume = useMemo(
+    () => todayEntries.reduce((sum, entry) => sum + entry.reps * Math.max(entry.sets, 1) + Math.floor(entry.duration_seconds / 10), 0),
+    [todayEntries],
+  );
+
+  const score = useMemo(() => Math.min(100, Math.floor(totalVolume * 0.6 + Math.min(40, todayEntries.length * 8))), [todayEntries.length, totalVolume]);
+
+  useEffect(() => {
+    if (!exercises.length) return;
   const totalVolume = todayEntries.reduce((sum, entry) => sum + entry.reps * Math.max(entry.sets, 1) + Math.floor(entry.duration_seconds / 10), 0);
 
   const score = Math.min(100, Math.floor(totalVolume * 0.6 + Math.min(40, todayEntries.length * 8)));
@@ -51,6 +84,8 @@ export const useAppState = () => {
       mood_note: score > 70 ? 'Excellent day' : score > 45 ? 'Solid day' : 'Light day',
       streak_count: streak,
     });
+    setDailySummaries(localBackend.listDailySummaries());
+  }, [date, exercises.length, score, streak, totalVolume]);
     refresh();
   };
 
@@ -71,6 +106,7 @@ export const useAppState = () => {
     refresh();
   };
 
+  const value: AppStateValue = {
   return {
     exercises,
     todayEntries,
@@ -80,6 +116,20 @@ export const useAppState = () => {
     score,
     scoreBucket: scoreToBucket(score),
     quoteIndex,
+    quotes,
+    logWorkout,
+    refresh,
+  };
+
+  return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
+};
+
+export const useAppState = () => {
+  const ctx = useContext(AppStateContext);
+  if (!ctx) {
+    throw new Error('useAppState must be used within AppStateProvider');
+  }
+  return ctx;
     logWorkout,
     refresh,
   };
